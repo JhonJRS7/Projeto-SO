@@ -2,10 +2,10 @@ import threading
 import random
 import time
 
-# Tamanho do tabuleiro
+# Tamanho do tabuleiro.
 BOARD_SIZE = 5
 
-# Tabuleiros dos jogadores
+# Tabuleiros dos jogadores.
 player_boards = [[['~' for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)] for _ in range(4)]
 
 class Barrier:
@@ -23,7 +23,7 @@ class Barrier:
             else:
                 self.condition.wait()
 
-# Instâncias das nossas implementações
+# Instâncias das implementações.
 turn_barrier = Barrier(4)
 turn_condition = threading.Condition()
 
@@ -36,7 +36,7 @@ def print_board(board):
     print()
 
 def place_ships(board):
-    # Posiciona navios de tamanhos variados no tabuleiro
+    # Posiciona navios de tamanhos variados no tabuleiro.
     for size in range(2, 5):
         for _ in range(2):
             while True:
@@ -47,8 +47,7 @@ def place_ships(board):
 
 def detect_race_condition():
     global race_condition_occurred
-    # Simula a detecção de uma condição de corrida aleatoriamente
-    if random.random() < 0.5:  # Aumentamos para 50% de chance de detectar uma condição de corrida
+    if random.random() < 0.5:  # Aumenento para 50% de chance de detectar uma condição de corrida.
         race_condition_occurred = True
         return True
     return False
@@ -87,7 +86,7 @@ def player_turn(player_id, board, opponent_boards, marker):
                 turn_condition.wait()
             
             x, y = random.randint(0, BOARD_SIZE - 1), random.randint(0, BOARD_SIZE - 1)
-                        opponent_id = random.choice([i for i in range(len(opponent_boards)) if i != player_id])
+            opponent_id = random.choice([i for i in range(len(opponent_boards)) if i != player_id])
             if mark_shot(opponent_boards[opponent_id], x, y, marker):
                 print(f"Jogador {player_id + 1} acertou um navio do Jogador {opponent_id + 1} em ({x}, {y})!")
             else:
@@ -120,7 +119,7 @@ def actual_check_victory(board):
     return True
 
 def game():
-    # Posiciona os navios dos jogadores
+    # Posiciona os navios.
     for board in player_boards:
         place_ships(board)
     
@@ -130,9 +129,10 @@ def game():
             if check_victory(player_boards[player_id]):
                 print(f"Jogador {player_id + 1} venceu!")
                 return
+        time.sleep(1)  # Adiciona uma pausa para ver se está funcionando mesmo ou não.
 
 if __name__ == "__main__":
-    # Rodando o jogo com a detecção e resolução de condições de corrida
+    # Rodando o jogo.
     threads = [threading.Thread(target=game) for _ in range(4)]
     for thread in threads:
         thread.start()
