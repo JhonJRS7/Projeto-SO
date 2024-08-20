@@ -1,0 +1,139 @@
+import threading
+import random
+import time
+
+# Tamanho do tabuleiro
+BOARD_SIZE = 5
+
+# Tabuleiros dos jogadores
+player_boards = [[['~' for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)] for _ in range(4)]
+
+class MessageQueue:
+    def __init__(self):
+        self.queue = []
+        self.condition = threading.Condition()
+
+    def put(self, message):
+        with self.condition:
+            self.queue.append(message)
+            self.condition.notify()
+
+    def get(self):
+        with self.condition:
+            while not self.queue:
+                self.condition.wait()
+            return self.queue.pop(0)
+
+# Instâncias das implementações
+message_queue = MessageQueue()
+turn_condition = threading.Condition()
+
+player_turns = [True, False, False, False]
+race_condition_occurred = False
+
+def print_board(board):
+    for row in board:
+        print(' '.join(row))
+    print()
+
+def place_ships(board):
+    # Posiciona navios de tamanhos variados no tabuleiro
+    for size in range(2, 5):
+        for _ in range(2):
+            while True:
+                x, y = random.randint(0, BOARD_SIZE - 1), random.randint(0, BOARD_SIZE - 1)
+                if board[x][y] == '~':
+                    board[x][y] = 'S'
+                    break
+
+def detect_race_condition():
+    global race_condition_occurred
+    # Simula a detecção de uma condição de corrida aleatoriamente
+    if random.random() < 0.2:  # 20% de chance de detectar uma condição de corrida
+        race_condition_occurred = True
+        return True
+    return False
+
+def resolve_race_condition():
+    global race_condition_occurred
+    print(f"Condição de corrida detectada! Utilizando Troca de Mensagens para resolver.")
+    race_condition_occurred = False
+    return "Message Queue"
+
+def mark_shot(board, x, y, marker):
+    if detect_race_condition():
+        resolution_method = resolve_race_condition()
+        if resolution_method == "Message Queue":
+            message_queue.put((board, x, y, marker))
+            board, x, y, marker = message_queue.get()
+            return actual_mark_shot(board, x, y, marker)
+    else:
+        return actual_mark_shot(board, x, y, marker)
+
+def actual_mark_shot(board, x, y, marker):
+    if board[x][y] == 'S':
+        board[x][y] = marker
+        return True
+    elif board[x][y] == '~':
+        board[x][y] = marker
+        return False
+    return False
+
+def player_turn(player_id, board, opponent_boards, marker):
+    global player_turns
+    while True:
+        with turn_condition:
+            while not player_turns[player_id]:
+                turn_condition.wait()
+            
+            x, y = random.randint(0, BOARD_SIZE - 1), random.randint(0, BOARD_SIZE - 1)
+            opponent_id = random.choice([i for i in range(len(opponent_boards)) if i != player_id])
+            if mark_shot(opponent_boards[opponent_id], x, y, marker):
+                print(f"Jogador {player_id + 1} acertou um navio do Jogador {opponent_id + 1} em ({x}, {y})!")
+            else:
+                print(f"Jogador {player_id + 1} errou em ({x}, {y})!")
+            print(f"Tabuleiro do Jogador {player_id + 1}:")
+            print_board(board)
+            print(f"Tabuleiro do Oponente (Jogador {opponent_id + 1}):")
+            print_board(opponent_boards[opponent_id])
+            
+            player_turns[player_id] = False
+            player_turns[(player_id + 1) % len(player_turns)] = True
+            turn_condition.notify_all()
+            break
+
+def check_victory(board):
+    if detect_race_condition():
+        resolution_method = resolve_race_condition()
+        if resolution_method == "Message Queue":
+            message_queue.put(board)
+            board = message_queue.get()
+            return actual_check_victory(board)
+    else:
+        return actual_check_victory(board)
+
+def actual_check_victory(board):
+    for row in board:
+        if 'S' in row:
+            return False
+    return True
+
+def game():
+    # Posiciona os navios dos jogadores
+    for board in player_boards:
+        place_ships(board)
+    
+    while True:
+        for player_id in range(len(player_boards)):
+            player_turn(player_id, player_boards[player_id], player_boards, 'X' if player_id % 2 == 0 else 'O')
+            if check_victory(player_boards[player_id]):
+                print(f"Jogador {player_id + 1} venceu!")
+                return
+
+if __name__ == "__main__":
+    # Rodando o jogo com a detecção e resolução de condições de corrida
+    threads = [threading.Thread(target=game) for _ in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
