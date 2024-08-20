@@ -1,0 +1,7 @@
+Alguns conteúdos que eu utilizei como referencia para fazer o programa: 
+  https://hackernoon.com/lang/pt/vamos-para-as-corridas-3-estratégias-eficazes-para-mitigar-as-condições-da-corrida
+  https://pt.stackoverflow.com/questions/159342/o-que-é-uma-condição-de-corrida
+  Livro do Tanenbaum que foi entregue pelo profe... digo, que compramos para nos dedicar na belíssima leitura.
+
+  
+  
