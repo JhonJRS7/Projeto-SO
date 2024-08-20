@@ -49,7 +49,7 @@ def place_ships(board):
 def detect_race_condition():
     global race_condition_occurred
     # Simula a detecção de uma condição de corrida aleatoriamente
-    if random.random() < 0.2:  # 20% de chance de detectar uma condição de corrida
+    if random.random() < 0.5:  # Aumentamos para 50% de chance de detectar uma condição de corrida
         race_condition_occurred = True
         return True
     return False
@@ -140,4 +140,4 @@ if __name__ == "__main__":
     for thread in threads:
         thread.start()
     for thread in threads:
-        thread.join() 
+        thread.join()
