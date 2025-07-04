@@ -1,0 +1,60 @@
+import pandas as pd
+import random
+
+# --- Configurações ---
+# Arquivo CSV de entrada: Contém a sua população de jogos verificados
+# Deve ter pelo menos as colunas 'appid' e 'verified_name'
+INPUT_VERIFIED_POPULATION_CSV = 'steam_verified_games_population_approx_1000.csv' 
+
+# Arquivo CSV de saída: Conterá sua amostra final de jogos
+OUTPUT_FINAL_SAMPLE_CSV = 'final_sample_for_analysis.csv'
+
+# Número de jogos a serem selecionados para a amostra final
+# (Pegue alguns a mais que 32 para ter margem caso algum scraping falhe completamente)
+SAMPLE_SIZE = 35 
+
+def select_random_sample(input_csv, output_csv, sample_size):
+    """
+    Lê uma população de jogos de um CSV, seleciona uma amostra aleatória
+    e salva essa amostra em um novo CSV.
+    """
+    try:
+        df_population = pd.read_csv(input_csv)
+        print(f"Lido arquivo de população: '{input_csv}' com {len(df_population)} jogos.")
+    except FileNotFoundError:
+        print(f"ERRO: Arquivo de população '{input_csv}' não encontrado.")
+        print("Certifique-se de que o script verificador foi executado e gerou este arquivo.")
+        return
+    except Exception as e:
+        print(f"ERRO ao ler o arquivo de população '{input_csv}': {e}")
+        return
+
+    # Verificar se colunas necessárias existem
+    if 'appid' not in df_population.columns or 'verified_name' not in df_population.columns:
+        print(f"ERRO: O arquivo '{input_csv}' deve conter as colunas 'appid' e 'verified_name'.")
+        return
+
+    # Verificar se a população é grande o suficiente para a amostra desejada
+    if len(df_population) < sample_size:
+        print(f"AVISO: A população ({len(df_population)} jogos) é menor que o tamanho da amostra desejado ({sample_size}).")
+        print(f"A amostra final conterá todos os {len(df_population)} jogos da população.")
+        df_sample = df_population.copy() # Usa toda a população se for menor
+    else:
+        # Selecionar a amostra aleatória
+        # O método sample() do pandas é ótimo para isso
+        df_sample = df_population.sample(n=sample_size, random_state=42) # random_state para reprodutibilidade
+        print(f"Selecionados {len(df_sample)} jogos aleatoriamente para a amostra.")
+
+    # Salvar a amostra em um novo arquivo CSV
+    try:
+        df_sample.to_csv(output_csv, index=False, encoding='utf-8-sig')
+        print(f"Amostra final salva em: '{output_csv}'")
+        print("\nConteúdo da amostra (primeiras linhas):")
+        print(df_sample.head())
+    except IOError as e:
+        print(f"ERRO ao salvar o arquivo de amostra '{output_csv}': {e}")
+    except Exception as e:
+        print(f"ERRO inesperado ao salvar a amostra: {e}")
+
+if __name__ == "__main__":
+    select_random_sample(INPUT_VERIFIED_POPULATION_CSV, OUTPUT_FINAL_SAMPLE_CSV, SAMPLE_SIZE)
